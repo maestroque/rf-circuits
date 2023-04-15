@@ -22,7 +22,7 @@ function circuitReflection(f)
     z1 = zIn(z0, 100 - 79.57im, loadLine) / z0
     zShort = zIn(z0, 0, shortLine) / z0
     z2 = 1 / (1 / z1 + 1 / zShort)
-    zIn2 = zIn(z0, z2, connectingLine) / z0
+    zIn2 = zIn(z0, z2 * z0, connectingLine) / z0
     zLoadTotal = 1 / zIn2 + 2π * 2.7 * 10e-3 * 50
     return (zLoadTotal - 50) / (zLoadTotal + 50)
 end
@@ -34,23 +34,7 @@ z0 = 50
 # Frequencies to be simulated
 f = 0 : (4 * f0 / N) : (4 * f0)
 
-# z1 = zIn(50, 100 - 79.57im, 0.2) / 50
-# zShort = zIn(50, 0, 0.13) / 50
-
-# z2 = 1 / (1 / z1 + 1 / zShort)
-
-# zIn2 = zIn(50, z2, 0.1) / 50
-
-# println(zIn2)
-
-# zLoadTotal = 1 / zIn2 + 2π * 2.7 * 10e-3 * 50
-
-# println(zLoadTotal)
-
-# Γ = (zLoadTotal - 50) / (zLoadTotal + 50)
-
+# Reflection Coefficients for the frequency sweep
 Γ = circuitReflection.(f)
 
-plot(f, abs.(Γ))
-
-# println("Reflection Coefficient Magnitude: ", abs(Γ))
+plot(f, 20log10.(abs.(Γ)))
