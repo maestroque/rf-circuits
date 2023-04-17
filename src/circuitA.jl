@@ -1,5 +1,8 @@
 using Revise
 using Plots
+using Statistics
+using Evolutionary
+using Distributions
 # includet("transmissionLines.jl")
 
 """
@@ -71,11 +74,18 @@ function filterReflection(f)
 
 end
 
-function stubCircuit(d1, d2, d3, l1, l2, l3, f)
+function stubCircuitReflection(lengthsVector, f)
+    d1 = lengthsVector[1]
+    l1 = lengthsVector[2]
+    d2 = lengthsVector[3]
+    l2 = lengthsVector[4]
+    d3 = lengthsVector[5]
+    l3 = lengthsVector[6]
+
     zLoad = 120 - 80im
     z0 = 50
-    lightSpeed = 299792458
-    lengthToLambda = l -> l * f / lightSpeed
+    f0 = 1e9
+    lengthToLambda = l -> l * f * f0 / 300000000
 
     zIn1 = zIn(z0, zLoad, lengthToLambda(d1))
     zStub1 = zIn(z0, Inf, lengthToLambda(l1))
@@ -92,6 +102,18 @@ function stubCircuit(d1, d2, d3, l1, l2, l3, f)
     return (zInTotal - 50) / (zInTotal + 50)
 end
 
+function stubMinimizingFunction(lengthsVector)
+    normf = 0.5 : 0.01 : 1.5
+    Γ = 20log10.(abs.(stubCircuitReflection.(Ref(lengthsVector), normf)))
+    return mean(Γ)
+end
+
+function stubPlot(lengthsVector)
+    normf = 0.5 : 0.01 : 1.5
+    Γ = 20log10.(abs.(stubCircuitReflection.(Ref(lengthsVector), normf)))
+    plot(normf, Γ)
+end
+
 N = 201
 f0 = 1e9
 z0 = 50
@@ -100,8 +122,23 @@ z0 = 50
 f = 0 : (4 * f0 / N) : (3 * f0)
 
 # Reflection Coefficients for the frequency sweep
-Γ = filterReflection.(f)
-SWR = (1 .+ abs.(Γ)) ./ (1 .- abs.(Γ))
+# Γ = filterReflection.(f)
+# SWR = (1 .+ abs.(Γ)) ./ (1 .- abs.(Γ))
 
-display(plot(f, 20log10.(abs.(Γ))))
-display(plot(f, SWR))
+# display(plot(f, 20log10.(abs.(Γ))))
+# display(plot(f, SWR))
+
+upper = ones(6)
+lower = 0.05 .* ones(6)
+constraints = BoxConstraints(lower, upper)
+ga = GA(populationSize = 2000)
+normf = 0.5 : 0.01 : 1.5
+
+# Γ = stubMinimizingFunction(rand(Uniform(0.05, 1), 6))
+result = Evolutionary.optimize(stubMinimizingFunction, constraints, ga)
+
+println("Optimal lengths: ", Evolutionary.minimizer(result))
+println("Minimum mean Γ: ", Evolutionary.minimum(result))
+stubPlot(Evolutionary.minimizer(result))
+
+
