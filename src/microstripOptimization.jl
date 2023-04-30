@@ -1,3 +1,11 @@
+using Revise
+using Plots
+using Statistics
+using Evolutionary
+using Distributions
+using LaTeXStrings
+includet("transmissionLines.jl")
+
 function stubCircuitReflection(lengthsVector, f)
     d1 = lengthsVector[1]
     l1 = lengthsVector[2]
@@ -33,22 +41,25 @@ function stubMinimizingFunction(lengthsVector)
 end
 
 function stubPlot(lengthsVector)
-    normf = 0.5 : 0.01 : 1.5
+    normf = 0.01 : 0.01 : 2
     Γ = 20log10.(abs.(stubCircuitReflection.(Ref(lengthsVector), normf)))
-    display(plot(normf, Γ))
+    p = plot(normf, Γ, gridlinewidth=2,
+            xlabel="Normalized Frequency" * L"\frac{f}{f_0}", 
+            ylabel="Γ in dB")
+    display(p)
 end
 
-# upper = ones(6)
-# lower = 0.001 .* ones(6) + [0, 0, 0.05, 0, 0.05, 0]
-# constraints = BoxConstraints(lower, upper)
-# ga = GA(populationSize = 200, selection = tournament(20), crossover=SPX, mutation = PLM())
+upper = ones(6)
+lower = 0.001 .* ones(6) + [0, 0, 0.05, 0, 0.05, 0]
+constraints = BoxConstraints(lower, upper)
+ga = GA(populationSize = 200, selection = tournament(20), crossover=SPX, mutation = PLM())
 
-# # Γ = stubMinimizingFunction(rand(Uniform(0.05, 1), 6))
-# options = Evolutionary.Options(show_trace = true, iterations = 100)
+# Γ = stubMinimizingFunction(rand(Uniform(0.05, 1), 6))
+options = Evolutionary.Options(show_trace = true, iterations = 100)
 
-# result = Evolutionary.optimize(stubMinimizingFunction, constraints, ga, options)
-# println("Optimal lengths: ", Evolutionary.minimizer(result))
-# println("Minimum mean Γ: ", Evolutionary.minimum(result))
-# stubPlot(Evolutionary.minimizer(result))
+result = Evolutionary.optimize(stubMinimizingFunction, constraints, ga, options)
+println("Optimal lengths: ", Evolutionary.minimizer(result))
+println("Minimum mean Γ: ", Evolutionary.minimum(result))
+stubPlot(Evolutionary.minimizer(result))
 
-# summary(result)
+summary(result)

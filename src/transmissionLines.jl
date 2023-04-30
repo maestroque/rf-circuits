@@ -21,6 +21,6 @@ end
 
 Returns the equivalent parallel impedance value
 """
-function parallel(z1::Complex, z2::Complex)
+function parallel(z1::Number, z2::Number)
     return 1 / (1 / z1 + 1 / z2)
 end    

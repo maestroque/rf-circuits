@@ -27,10 +27,10 @@ function circuitReflection(f)
     z2 = parallel(z1, zShort)
     zIn2 = zIn(z0, z2, connectingLine) 
     zLoadTotal = parallel(zIn2, zCIn) 
-    return (zLoadTotal - 50) / (zLoadTotal + 50)
+    return (zLoadTotal - z0) / (zLoadTotal + z0)
 end
 
-N = 201
+N = 2000
 f0 = 1e9
 z0 = 50
 
@@ -41,8 +41,17 @@ f = 0 : (4 * f0 / N) : (2 * f0)
 Γ = circuitReflection.(f)
 SWR = (1 .+ abs.(Γ)) ./ (1 .- abs.(Γ))
 
-display(plot(f, 20log10.(abs.(Γ))))
-display(plot(f, SWR))
+SWR[SWR .> 10] .= 10
 
+reflectionPlot = plot(
+                    f ./ 10e9, 20log10.(abs.(Γ)), gridlinewidth=2, 
+                    xlabel="Frequency in GHz", ylabel="Γ in dB")
 
-println(abs(circuitReflection(0.3e9)))
+swrPlot = plot(
+            f ./ 10e8, SWR, gridlinewidth=2,
+            xlabel="Frequency in GHz", ylabel="SWR")
+
+display(reflectionPlot)
+display(swrPlot)
+
+println(20log10(abs(circuitReflection(1.5e9))))
