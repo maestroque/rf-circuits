@@ -14,7 +14,7 @@ function stubCircuitReflection(lengthsVector, f)
     d3 = lengthsVector[5]
     l3 = lengthsVector[6]
 
-    zLoad = 120 - 80im
+    zLoad = 200 + 150im
     z0 = 50
     f0 = 1e9
     lengthToLambda = l -> l * f * f0 / 300000000  
@@ -35,7 +35,7 @@ function stubCircuitReflection(lengthsVector, f)
 end
 
 function stubMinimizingFunction(lengthsVector)
-    normf = 0.5 : 0.01 : 1.5
+    normf = 0.01 : 0.01 : 2
     Γ = 20log10.(abs.(stubCircuitReflection.(Ref(lengthsVector), normf)))
     return mean(Γ)
 end
@@ -49,10 +49,13 @@ function stubPlot(lengthsVector)
     display(p)
 end
 
-upper = ones(6)
-lower = 0.001 .* ones(6) + [0, 0, 0.05, 0, 0.05, 0]
+
+f0 = 1e9
+lambda = 300000000 / f0
+upper = lambda * ones(6)
+lower = 0.001*lambda .* ones(6) + [0, 0, 0.05*lambda, 0, 0.05*lambda, 0]
 constraints = BoxConstraints(lower, upper)
-ga = GA(populationSize = 200, selection = tournament(20), crossover=SPX, mutation = PLM())
+ga = GA(populationSize = 500, selection = tournament(50), crossover=SPX, mutation = PLM())
 
 # Γ = stubMinimizingFunction(rand(Uniform(0.05, 1), 6))
 options = Evolutionary.Options(show_trace = true, iterations = 100)
