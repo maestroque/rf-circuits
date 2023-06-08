@@ -14,7 +14,7 @@ function stubCircuitReflection(lengthsVector, f)
     d3 = lengthsVector[5]
     l3 = lengthsVector[6]
 
-    zLoad = 200 + 150im
+    zLoad = 100
     z0 = 50
     f0 = 1e9
     lengthToLambda = l -> l * f * f0 / 300000000  
@@ -43,13 +43,13 @@ end
 function stubPlot(lengthsVector)
     normf = 0.01 : 0.01 : 2
     Γ = 20log10.(abs.(stubCircuitReflection.(Ref(lengthsVector), normf)))
-    p = plot(normf, Γ, gridlinewidth=2,
+    p = Plots.plot(normf, Γ, gridlinewidth=2,
             xlabel="Normalized Frequency" * L"\frac{f}{f_0}", 
             ylabel="Γ in dB")
     display(p)
 end
 
-
+gr()
 f0 = 1e9
 lambda = 300000000 / f0
 upper = lambda * ones(6)
