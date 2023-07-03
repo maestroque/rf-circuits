@@ -28,16 +28,6 @@ mutable struct AntennaArray
     end
 end
 
-"""
-## Arguements
-- `f`: Frequency
-- `I`: Current 
-- `d`: Distance between dipoles
-- `θ`: 
-- `ϕ`:
-- `N`: Number of dipoles
-- `alternatingCurrents`: Whether all currents are the same polarity or alternating
-"""
 function antennaArrayFieldIntensity(a::AntennaArray, θ, ϕ)
     k = 2π / a.λ
     r = 10
@@ -53,6 +43,31 @@ function antennaArrayFieldIntensity(a::AntennaArray, θ, ϕ)
     return abs(im * 60 * a.I * exp(-im * k * r) * (cos(k / 2 * a.l * cos(θ)) - cos(k / 2 * a.l)) / (r * sin(θ)) * arrayFactor)
 end
 
+function directivity(a::AntennaArray)
+    maxSteps = 100
+    θ = range(2π/maxSteps, stop=2π, length=maxSteps)
+    ϕ = range(π/maxSteps, stop=π, length=maxSteps)
+    η0 = 120*π
+
+    E = antennaArrayFieldIntensity.(Ref(a), θ, ϕ)
+    P = (abs.(E)).^2 ./ (2 * η0)
+
+    # Pav = sum(P .* sin.(θ) .* 2π/50 * π/50)
+    Pav = 0
+    for p ∈ ϕ
+        for t ∈ θ
+            El = antennaArrayFieldIntensity(a, p, t)
+            Pl = (abs(El))^2 / (2 * η0)
+            Pav += Pl * sin(t) * 2π/50 * π/50
+            println(Pav)
+        end
+    end
+    println("Total Average", Pav)
+    println(maximum(P))
+    return 10log10(4π * maximum(P) / Pav)
+
+end
+
 function color_function(x, y, z)
     radius = sqrt(x^2 + y^2 + z^2)
     return radius
@@ -63,10 +78,8 @@ f = 1e9
 I = 1
 θ = range(0, stop=2π, length=maxSteps)
 ϕ = range(0, stop=π, length=maxSteps)
-a = AntennaArray(f, I, 0.5, 0.5)
+a = AntennaArray(f, I, 0.25, 0.5, 1, true)
 
-
-# E = antennaArrayFieldIntensity.(Ref(a), 0, ϕ)
 gr()
 
 display(Plots.plot(ϕ, antennaArrayFieldIntensity.(Ref(a), π/2, ϕ), proj=:polar, gridlinewidth=2, title="θ=0"))
