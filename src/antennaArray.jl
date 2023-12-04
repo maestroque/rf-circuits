@@ -1,7 +1,6 @@
 using Revise
 using Plots
-using PyPlot
-using PyCall
+using PlotlyJS
 
 mutable struct AntennaArray
     λ::Float64
@@ -78,9 +77,9 @@ f = 1e9
 I = 1
 θ = range(0, stop=2π, length=maxSteps)
 ϕ = range(0, stop=π, length=maxSteps)
-a = AntennaArray(f, I, 0.25, 0.5, 1, true)
+a = AntennaArray(f, I, 0.25, 0.5, 4, true)
 
-gr()
+plotlyjs()
 
 display(Plots.plot(ϕ, antennaArrayFieldIntensity.(Ref(a), π/2, ϕ), proj=:polar, gridlinewidth=2, title="θ=0"))
 display(Plots.plot(θ, antennaArrayFieldIntensity.(Ref(a), θ, 0), proj=:polar, gridlinewidth=2, title="φ=0"))
@@ -89,16 +88,9 @@ X(r,theta,phi) = r * sin(theta) * sin(phi)
 Y(r,theta,phi) = r * sin(theta) * cos(phi)
 Z(r,theta,phi) = r * cos(theta)
 
-pyplot()
-
 xs = [X(antennaArrayFieldIntensity(a, theta, phi), theta, phi) for theta in θ, phi in ϕ]
 ys = [Y(antennaArrayFieldIntensity(a, theta, phi), theta, phi) for theta in θ, phi in ϕ]
 zs = [Z(antennaArrayFieldIntensity(a, theta, phi), theta, phi) for theta in θ, phi in ϕ]
 
-# Initiate the radial color map
-R = color_function.(xs, ys, zs)
-R[1, :] = 0*ones(size(zs[1,:]))
-R = R ./ maximum(R)
-
 # Plot the 3D radiation pattern
-surface(xs, ys, zs, fill_z = R)
+PlotlyJS.plot(PlotlyJS.surface(x=xs, y=ys, z=zs, surfacecolor=@. xs^2 + ys^2 + zs^2))
